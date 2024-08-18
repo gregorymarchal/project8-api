@@ -62,6 +62,11 @@ def perform_segmentation(image_path, dimensions=DIMENSIONS):
 
     return rgb_matrix
 
+# Root URL: Health Check
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "API is running", "version": "1.0.0"}), 200
+
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if 'file' not in request.files:
