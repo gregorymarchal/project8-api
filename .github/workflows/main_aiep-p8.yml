@@ -19,7 +19,7 @@ jobs:
 
       - name: Download Model from Web Server
         run: |
-          curl -O http://www.gregorymarchal.com/pub/mobile_net_fpn_model-final-best.keras
+          curl -O https://www.gregorymarchal.com/pub/mobile_net_fpn_model-final-best.keras
 
       - name: Set up Python version
         uses: actions/setup-python@v5
