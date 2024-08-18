@@ -1,7 +1,10 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
+import numpy as np
 import skimage as ski
 import tensorflow as tf
+from werkzeug.utils import secure_filename
+from io import BytesIO
 
 HEIGHT = 128
 WIDTH = 256
@@ -38,39 +41,33 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def one_hot_to_rgb(one_hot_matrix, color_dict=CATEGORY_IDS_TO_COLORS):
-    """
-    Converts a one-hot encoded 3D matrix to a 2D matrix of class labels,
-    then uses a color dictionary to map class labels to RGB values.
-
-    Parameters:
-    one_hot_matrix (np.ndarray): One-hot encoded 3D matrix.
-    color_dict (dict): Dictionary mapping class labels to RGB tuples.
-
-    Returns:
-    np.ndarray: 3D RGB matrix.
-    """
-    # Step 1: Convert one-hot encoded matrix to 2D matrix of class labels
     class_labels = np.argmax(one_hot_matrix, axis=-1)
-
-    # Step 2: Create an empty RGB matrix
     h, w = class_labels.shape
     rgb_matrix = np.zeros((h, w, 3), dtype=np.uint8)
 
-    # Step 3: Map class labels to RGB values using the color dictionary
     for label, color in color_dict.items():
         rgb_matrix[class_labels == label] = color
 
     return rgb_matrix
 
+def perform_segmentation(image_path, dimensions=DIMENSIONS):
+    image = ski.io.imread(image_path)
+    image = ski.transform.resize(image, dimensions, anti_aliasing=True)
+    input_image = np.expand_dims(image, axis=0)  # Add batch dimension
+
+    predicted_output = model.predict(input_image)
+    predicted_output = np.squeeze(predicted_output, axis=0)
+
+    rgb_matrix = one_hot_to_rgb(predicted_output, CATEGORY_IDS_TO_COLORS)
+
+    return rgb_matrix
+
 @app.route("/upload", methods=["POST"])
 def upload_file():
-    # Check if the post request has the file part
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
 
     file = request.files['file']
-
-    # If user does not select file, browser may submit an empty part without filename
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
@@ -78,29 +75,16 @@ def upload_file():
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
-        return jsonify({'message': f'File successfully uploaded to {file_path}'}), 200
+
+        # Perform segmentation on the uploaded file
+        rgb_mask = perform_segmentation(file_path)
+
+        # Convert the RGB mask to a PNG image in memory
+        img_io = BytesIO()
+        ski.io.imsave(img_io, rgb_mask, format='png')
+        img_io.seek(0)
+
+        # Send the image back in the response
+        return send_file(img_io, mimetype='image/png')
 
     return jsonify({'error': 'File type not allowed'}), 400
-
-def perform_segmentation(image_path, dimensions=DIMENSIONS):
-    # Load the pre-trained TensorFlow model
-    model = tf.keras.models.load_model("mobile_net_fpn_model-final-best.keras")
-
-    # Preprocess the image
-    image = ski.io.imread(image_path)
-    image = ski.transform.resize(image, dimensions)
-    input_image = np.expand_dims(image, axis=0)  # Add batch dimension
-
-    # Make a prediction
-    predicted_output = model.predict(input_image)
-    predicted_output = np.squeeze(predicted_output, axis=0)
-
-    # Convert one-hot encoded matrix to RGB matrix
-    rgb_matrix = one_hot_to_rgb(predicted_output, CATEGORY_IDS_TO_COLORS)
-
-    annotation_path = image_path.replace(".png", "-color.png")
-
-    # Save the predicted output as an image file
-    ski.io.imsave(annotation_path, rgb_matrix)
-
-    return annotation_path
