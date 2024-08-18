@@ -1,7 +1,7 @@
 gunicorn
 flask
 numpy
-tensorflow
-tf-keras
+tensorflow==2.15.1
+tf-keras==2.15.1
 scikit-image
 Werkzeug
