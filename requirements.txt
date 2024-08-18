@@ -2,7 +2,6 @@ gunicorn
 flask
 numpy
 tensorflow
-keras
 tf-keras
 scikit-image
 Werkzeug
