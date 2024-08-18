@@ -1,5 +1,7 @@
 gunicorn
 flask
+numpy
 tensorflow
 tf-keras
 scikit-image
+Werkzeug
