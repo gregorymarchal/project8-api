@@ -36,7 +36,7 @@ The API uses a pre-trained TensorFlow model (`mobile_net_fpn_model-final-best.ke
 
 4. **Add your TensorFlow model**:
     
-    Place your pre-trained TensorFlow model file (`mobile_net_fpn_model-final-best.keras`) in the root directory of the project.
+    Place my pre-trained TensorFlow model file https://www.gregorymarchal.com/pub/mobile_net_fpn_model-final-best.keras in the root directory of the project. Or use yours!
 
 ## Usage
 
