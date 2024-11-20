@@ -76,9 +76,9 @@ The API uses a pre-trained TensorFlow model (`mobile_net_fpn_model-final-best.ke
 
 - Python 3.10
 - TensorFlow 2.15.1
-- Flask.
-- scikit-image.
-- NumPy.
+- Flask
+- scikit-image
+- NumPy
 
 ## License
 
