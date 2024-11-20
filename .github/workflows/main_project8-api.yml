@@ -32,6 +32,9 @@ jobs:
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
+      - name: Download model file
+        run: wget -O mobile_net_fpn_model-final-best.keras https://www.gregorymarchal.com/pub/mobile_net_fpn_model-final-best.keras
+
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
 
